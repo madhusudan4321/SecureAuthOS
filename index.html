@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Auth</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#0f172a,#111827,#1e293b);
+  font-family:'Segoe UI',Arial,sans-serif;
+  color:#fff;
+  padding:1rem;
+}
+
+.auth-card{
+  width:100%;
+  max-width:380px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  backdrop-filter:blur(14px);
+  border-radius:22px;
+  padding:2rem;
+}
+
+.auth-icon{
+  width:44px;height:44px;
+  border-radius:12px;
+  background:rgba(59,130,246,0.15);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:1.25rem;
+}
+.auth-icon svg{
+  width:22px;height:22px;
+  stroke:#93c5fd;fill:none;
+  stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;
+}
+
+.auth-heading{font-size:20px;font-weight:600;margin-bottom:4px;color:#f1f5f9}
+.auth-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:1.5rem}
+
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:5px;letter-spacing:.02em}
+.field input{
+  width:100%;padding:10px 13px;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  background:rgba(255,255,255,0.07);
+  color:#fff;
+  font-size:14px;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field input::placeholder{color:rgba(255,255,255,0.3)}
+.field input:focus{border-color:rgba(59,130,246,0.6);box-shadow:0 0 0 3px rgba(59,130,246,0.15)}
+
+.btn-primary{
+  width:100%;padding:10px 16px;
+  border:none;border-radius:10px;
+  background:linear-gradient(135deg,#3b82f6,#2563eb);
+  color:#fff;
+  font-size:14px;font-weight:600;
+  cursor:pointer;margin-top:4px;
+  transition:opacity .15s,transform .1s,box-shadow .15s;
+}
+.btn-primary:hover{opacity:.9;box-shadow:0 8px 20px rgba(37,99,235,0.3)}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.divider{display:flex;align-items:center;gap:10px;margin:1.25rem 0 1rem}
+.divider span{font-size:12px;color:rgba(255,255,255,0.3);white-space:nowrap}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08)}
+
+.link-btn{
+  width:100%;padding:10px 16px;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  background:transparent;
+  color:rgba(255,255,255,0.7);
+  font-size:14px;
+  cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.link-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18)}
+
+.msg-box{
+  margin-top:12px;
+  padding:9px 12px;
+  border-radius:10px;
+  font-size:13px;
+  display:none;
+}
+.msg-box.success{background:rgba(34,197,94,0.12);color:#86efac;border:1px solid rgba(34,197,94,0.2);display:block}
+.msg-box.error{background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.2);display:block}
+.msg-box.info{background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);display:block}
+
+.otp-input-wrap{display:flex;gap:10px;justify-content:center;margin:1rem 0}
+.otp-input-wrap input{
+  width:52px;height:56px;text-align:center;
+  font-size:22px;font-weight:600;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;
+  background:rgba(255,255,255,0.07);
+  color:#fff;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.otp-input-wrap input:focus{border-color:rgba(59,130,246,0.6);box-shadow:0 0 0 3px rgba(59,130,246,0.15)}
+
+.otp-hint{font-size:12px;color:rgba(255,255,255,0.4);text-align:center;margin-top:.75rem}
+.otp-hint span{color:#93c5fd;cursor:pointer}
+.otp-hint span:hover{color:#bfdbfe}
+
+.success-avatar{
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(34,197,94,0.15);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1.25rem;
+}
+.success-avatar svg{width:24px;height:24px;stroke:#86efac;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- Register -->
+<div class="auth-card" id="regBox">
+  <div class="auth-icon">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+  </div>
+  <div class="auth-heading">Create an account</div>
+  <div class="auth-sub">Fill in your details to get started</div>
+  <div class="field"><label>Username</label><input type="text" id="ruser" placeholder="e.g. alex_92"></div>
+  <div class="field"><label>Password</label><input type="password" id="rpass" placeholder="Min. 6 characters"></div>
+  <button class="btn-primary" id="regBtn" onclick="registerUser()">Create account</button>
+  <div class="divider"><span>or</span></div>
+  <button class="link-btn" onclick="show('loginBox')">Sign in instead</button>
+  <div class="msg-box" id="regMsg"></div>
+</div>
+
+<!-- Login -->
+<div class="auth-card hidden" id="loginBox">
+  <div class="auth-icon">
+    <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+  </div>
+  <div class="auth-heading">Welcome back</div>
+  <div class="auth-sub">Sign in to your account</div>
+  <div class="field"><label>Username</label><input type="text" id="luser" placeholder="Your username"></div>
+  <div class="field"><label>Password</label><input type="password" id="lpass" placeholder="Your password"></div>
+  <button class="btn-primary" id="loginBtn" onclick="loginUser()">Sign in</button>
+  <div class="divider"><span>or</span></div>
+  <button class="link-btn" onclick="show('regBox')">Create account</button>
+  <div class="msg-box" id="loginMsg"></div>
+</div>
+
+<!-- OTP -->
+<div class="auth-card hidden" id="otpBox">
+  <div class="auth-icon">
+    <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1" fill="#93c5fd"/></svg>
+  </div>
+  <div class="auth-heading">Two-step verification</div>
+  <div class="auth-sub">Enter the 4-digit code sent to your device</div>
+  <div class="otp-input-wrap">
+    <input type="text" maxlength="1" id="d0" oninput="otpMove(this,1)" onkeydown="otpBack(event,0)">
+    <input type="text" maxlength="1" id="d1" oninput="otpMove(this,2)" onkeydown="otpBack(event,1)">
+    <input type="text" maxlength="1" id="d2" oninput="otpMove(this,3)" onkeydown="otpBack(event,2)">
+    <input type="text" maxlength="1" id="d3" oninput="otpMove(this,-1)" onkeydown="otpBack(event,3)">
+  </div>
+  <button class="btn-primary" id="otpBtn" onclick="verifyOTP()">Verify code</button>
+  <p class="otp-hint">Didn't receive a code? <span onclick="resendOTP()">Resend</span></p>
+  <div class="msg-box" id="otpMsg"></div>
+</div>
+
+<!-- Success -->
+<div class="auth-card hidden" id="successBox" style="text-align:center">
+  <div class="success-avatar">
+    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="auth-heading" style="text-align:center">You're in!</div>
+  <div class="auth-sub" style="text-align:center;margin-bottom:1.5rem">Logged in as <strong id="loggedInUser" style="color:#f1f5f9"></strong></div>
+  <button class="btn-primary" onclick="logout()">Sign out</button>
+</div>
+
+<script>
+let generatedOTP = "";
+let currentUser = "";
+
+function show(id) {
+  ['regBox','loginBox','otpBox','successBox'].forEach(x =>
+    document.getElementById(x).classList.add('hidden')
+  );
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function setMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg-box ' + (type || 'info');
+  if (!text) el.style.display = 'none';
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Please wait...' : btn.dataset.label;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  ['regBtn','loginBtn','otpBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    el.dataset.label = el.textContent;
+  });
+});
+
+async function registerUser() {
+  const username = document.getElementById('ruser').value.trim();
+  const password = document.getElementById('rpass').value.trim();
+  if (!username || !password) { setMsg('regMsg','Please fill in all fields.','error'); return; }
+  if (password.length < 6) { setMsg('regMsg','Password must be at least 6 characters.','error'); return; }
+
+  setLoading('regBtn', true);
+  try {
+    const res = await fetch('/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    setMsg('regMsg', data.msg, data.ok ? 'success' : 'error');
+    if (data.ok) {
+      document.getElementById('ruser').value = '';
+      document.getElementById('rpass').value = '';
+    }
+  } catch(e) {
+    setMsg('regMsg', 'Server error. Is the backend running?', 'error');
+  }
+  setLoading('regBtn', false);
+}
+
+async function loginUser() {
+  const username = document.getElementById('luser').value.trim();
+  const password = document.getElementById('lpass').value.trim();
+  if (!username || !password) { setMsg('loginMsg','Please fill in all fields.','error'); return; }
+
+  setLoading('loginBtn', true);
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      setMsg('loginMsg', data.msg, 'error');
+      setLoading('loginBtn', false);
+      return;
+    }
+    currentUser = username;
+    generatedOTP = data.otp;
+    alert('Your OTP is: ' + generatedOTP);
+    show('otpBox');
+    ['d0','d1','d2','d3'].forEach(x => document.getElementById(x).value = '');
+    document.getElementById('d0').focus();
+  } catch(e) {
+    setMsg('loginMsg', 'Server error. Is the backend running?', 'error');
+  }
+  setLoading('loginBtn', false);
+}
+
+function otpMove(el, next) {
+  if (el.value && next >= 0) document.getElementById('d' + next)?.focus();
+}
+
+function otpBack(e, idx) {
+  if (e.key === 'Backspace' && !e.target.value && idx > 0)
+    document.getElementById('d' + (idx - 1)).focus();
+}
+
+async function verifyOTP() {
+  const entered = ['d0','d1','d2','d3'].map(x => document.getElementById(x).value).join('');
+  if (entered.length < 4) { setMsg('otpMsg','Please enter all 4 digits.','error'); return; }
+
+  setLoading('otpBtn', true);
+  if (entered === generatedOTP) {
+    await fetch('/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: currentUser })
+    });
+    document.getElementById('loggedInUser').textContent = currentUser;
+    generatedOTP = '';
+    show('successBox');
+  } else {
+    setMsg('otpMsg', 'Incorrect code. Please try again.', 'error');
+    ['d0','d1','d2','d3'].forEach(x => document.getElementById(x).value = '');
+    document.getElementById('d0').focus();
+  }
+  setLoading('otpBtn', false);
+}
+
+function resendOTP() {
+  generatedOTP = String(Math.floor(1000 + Math.random() * 9000));
+  ['d0','d1','d2','d3'].forEach(x => document.getElementById(x).value = '');
+  document.getElementById('d0').focus();
+  setMsg('otpMsg', 'A new code has been sent.', 'info');
+  setTimeout(() => alert('Your new OTP is: ' + generatedOTP), 100);
+}
+
+function logout() {
+  currentUser = '';
+  generatedOTP = '';
+  document.getElementById('luser').value = '';
+  document.getElementById('lpass').value = '';
+  setMsg('loginMsg', '', '');
+  show('loginBox');
+}
+</script>
+</body>
+</html>
